@@ -162,6 +162,42 @@ exports.addBooking = async (req, res) => {
 };
 
 
+// exports.getCheckoutSession = async(req , res) => {
+//     try{
+//         console.log("nnn")
+//         const url = "https://api.sandbox.konnect.network/api/v2/payments/init-payment"
+//         const payload =  {
+//             receiverWalletId: process.env.WALLET_ID,
+//             amount : req.body.amount,
+//             description: req.body.description,
+//             acceptedPaymentMethods: ["e-DINAR"],
+//             successUrl: `http://localhost:51114/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}&date=${req.query.date}`,
+//             failUrl: `http://localhost:51114/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}`,
+//         }
+
+//         const response = await fetch(url , {
+//             method: "POST",
+//             body: JSON.stringify(payload),
+//             headers:{
+//                 'Content-Type': 'application/json',
+//                 'x-api-key': process.env.API_KEY_KONNECT
+//             }
+//         })
+
+//         const resData = await response.json()
+
+//         res.json({
+//             status: 'success',
+//             result: resData
+//         })
+//     }catch(err){
+//         res.status(400).json({
+//             status: 'fail',
+//             message: err
+//         })
+//     }
+// }
+
 exports.getCheckoutSession = async(req , res) => {
     try{
         console.log("nnn")
@@ -171,10 +207,8 @@ exports.getCheckoutSession = async(req , res) => {
             amount : req.body.amount,
             description: req.body.description,
             acceptedPaymentMethods: ["e-DINAR"],
-            successUrl: `http://localhost:3000/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}&date=${req.query.date}`,
-            failUrl: `http://localhost:3000/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}`,
-    
-
+            successUrl: `http://localhost:3000/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}&date=${req.query.date}`,
+            failUrl: `http://localhost:3000/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}`,
         }
 
         const response = await fetch(url , {
@@ -199,6 +233,7 @@ exports.getCheckoutSession = async(req , res) => {
         })
     }
 }
+
 exports.verify = async (req , res) => {
 
     try{

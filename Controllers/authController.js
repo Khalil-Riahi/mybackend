@@ -50,7 +50,9 @@ exports.signup=catchAsync(async(req,res)=>{
     })
 
 exports.login = async (req, res, next) => {
-
+    console.log("hetha: " + req.hostname)
+    console.log('IP address:', req.ip);
+    console.log('Full headers:', req.headers.origin);
     const { email, password } = req.body;
     if (!email || !password) {
         return next(new AppError('Please provide an email and password', 400));
@@ -185,6 +187,42 @@ exports.getPoints=async(req,res)=>{
 //   }
 
 // }
+// exports.getCheckoutSession1 = async(req , res) => {
+//   try{
+//       const url = "https://api.sandbox.konnect.network/api/v2/payments/init-payment"
+//       const payload =  {
+//           receiverWalletId: process.env.WALLET_ID,
+//           amount : req.body.amount,
+//           description: req.body.description,
+//           acceptedPaymentMethods: ["e-DINAR"],
+//           successUrl: `http://localhost:3000/points/verify?status=success&userId=${req.query.userId}&points=${req.query.points}`,
+//           failUrl: `http://localhost:3000/points/verify?status=failed`,
+
+//       }
+
+//       const response = await fetch(url , {
+//           method: "POST",
+//           body: JSON.stringify(payload),
+//           headers:{
+//               'Content-Type': 'application/json',
+//               'x-api-key': process.env.API_KEY_KONNECT
+//           }
+//       })
+
+//       const resData = await response.json()
+
+//       res.json({
+//           status: 'success',
+//           result: resData
+//       })
+//   }catch(err){
+//       res.status(400).json({
+//           status: 'fail',
+//           message: err
+//       })
+//   }
+// }
+
 exports.getCheckoutSession1 = async(req , res) => {
   try{
       const url = "https://api.sandbox.konnect.network/api/v2/payments/init-payment"
@@ -193,9 +231,8 @@ exports.getCheckoutSession1 = async(req , res) => {
           amount : req.body.amount,
           description: req.body.description,
           acceptedPaymentMethods: ["e-DINAR"],
-          successUrl: `http://localhost:3000/points/verify?status=success&userId=${req.query.userId}&points=${req.query.points}`,
-          failUrl: `http://localhost:3000/points/verify?status=failed`,
-
+          successUrl: `http://localhost:62252/#/points/verify?status=success&userId=${req.query.userId}&points=${req.query.points}`,
+          failUrl: `http://localhost:62252/#/points/verify?status=failed`,
       }
 
       const response = await fetch(url , {
@@ -220,6 +257,7 @@ exports.getCheckoutSession1 = async(req , res) => {
       })
   }
 }
+
 exports.verifyPayment = async (req, res) => {
   try {
     const { userId, points } = req.query;

@@ -106,7 +106,14 @@ app.use(cors(
       'http://localhost:63336',
       'http://localhost:51556',
       'http://localhost:51556',
-      'http://localhost:62065'
+      'http://localhost:62065',
+      'http://localhost:61576',
+      'http://localhost:57134',
+      'http://localhost:58004',
+      'http://localhost:65305',
+      'http://localhost:49836',
+      'http://localhost:51114'
+
       // 'http://localhost:50092'.
       // 'http://localhost:64535'
       // 'http://localhost:65080/',

@@ -343,93 +343,94 @@ const axios = require('axios')
 //   }
 // };
 
-exports.getCheckoutSession = async (req, res) => {
-  try {
-    const url = "https://api.sandbox.konnect.network/api/v2/payments/init-payment";
+// exports.getCheckoutSession = async (req, res) => {
+//   try {
+//     const url = "https://api.sandbox.konnect.network/api/v2/payments/init-payment";
 
-    // parse start_date and compute end_date based on the plan
-    const start_date = new Date(req.body.start_date);
-    let end_date = new Date(start_date);
+//     // parse start_date and compute end_date based on the plan
+//     const start_date = new Date(req.body.start_date);
+//     let end_date = new Date(start_date);
 
-    const subscription = await Subscription.findById(req.body.subId);
-    if (!subscription) {
-      return res.status(404).json({ status: "fail", message: "Subscription not found" });
-    }
+//     const subscription = await Subscription.findById(req.body.subId);
+//     if (!subscription) {
+//       return res.status(404).json({ status: "fail", message: "Subscription not found" });
+//     }
 
-    if (subscription.subscriptionType === "daily") {
-      end_date.setDate(end_date.getDate() + 1);
-    } else if (subscription.subscriptionType === "weekly") {
-      end_date.setDate(end_date.getDate() + 7);
-    } else if (subscription.subscriptionType.startsWith("monthly")) {
-      end_date.setMonth(end_date.getMonth() + 1);
-    }
+//     if (subscription.subscriptionType === "daily") {
+//       end_date.setDate(end_date.getDate() + 1);
+//     } else if (subscription.subscriptionType === "weekly") {
+//       end_date.setDate(end_date.getDate() + 7);
+//     } else if (subscription.subscriptionType.startsWith("monthly")) {
+//       end_date.setMonth(end_date.getMonth() + 1);
+//     }
 
-    // conflict check for same table_id
-    if (subscription.table_id) {
-      // find *any* existing booking that overlaps [start_date, end_date]
-      const potentiallyConflicted = await UserSubscription.find({
-        start_date: { $lte: end_date },
-        end_date:   { $gte: start_date }
-      }).populate('id_subscription');
+//     // conflict check for same table_id
+//     if (subscription.table_id) {
+//       // find *any* existing booking that overlaps [start_date, end_date]
+//       const potentiallyConflicted = await UserSubscription.find({
+//         start_date: { $lte: end_date },
+//         end_date:   { $gte: start_date }
+//       }).populate('id_subscription');
 
-      // filter to the same table
-      const conflicts = potentiallyConflicted.filter(us =>
-        us.id_subscription &&
-        us.id_subscription.table_id?.toString() === subscription.table_id.toString()
-      );
+//       // filter to the same table
+//       const conflicts = potentiallyConflicted.filter(us =>
+//         us.id_subscription &&
+//         us.id_subscription.table_id?.toString() === subscription.table_id.toString()
+//       );
 
-      if (conflicts.length > 0) {
-        // pick the one that ends the latest
-        const lastEnding = conflicts.reduce((prev, cur) =>
-          new Date(cur.end_date) > new Date(prev.end_date) ? cur : prev
-        );
-        const nextAvailable = new Date(lastEnding.end_date);
-        // if you want to require one extra day gap:
-        // nextAvailable.setDate(nextAvailable.getDate() + 1);
+//       if (conflicts.length > 0) {
+//         // pick the one that ends the latest
+//         const lastEnding = conflicts.reduce((prev, cur) =>
+//           new Date(cur.end_date) > new Date(prev.end_date) ? cur : prev
+//         );
+//         const nextAvailable = new Date(lastEnding.end_date);
+//         // if you want to require one extra day gap:
+//         // nextAvailable.setDate(nextAvailable.getDate() + 1);
 
-        return res.status(210).json({
-          status: 'success',
-          message: `You can only reserve after ${new Intl.DateTimeFormat('en-CA').format(nextAvailable)}`
-        });
-      }
-    }
+//         return res.status(210).json({
+//           status: 'success',
+//           message: `You can only reserve after ${new Intl.DateTimeFormat('en-CA').format(nextAvailable)}`
+//         });
+//       }
+//     }
 
-    // build payment payload
-    const payload = {
-      receiverWalletId: process.env.WALLET_ID,
-      amount: req.body.amount,
-      description: req.body.description,
-      acceptedPaymentMethods: ["e-DINAR"],
-      successUrl: `http://localhost:3000/subPay?status=success&subId=${req.body.subId}` +
-                  `&start_date=${start_date.toISOString()}` +
-                  `&end_date=${end_date.toISOString()}`,
-      failUrl: `http://localhost:3000/subPay?status=failed`
-    };
+//     // build payment payloa
+//     const payload = {
+//       receiverWalletId: process.env.WALLET_ID,
+//       amount: req.body.amount,
+//       description: req.body.description,
+//       acceptedPaymentMethods: ["e-DINAR"],
+//       successUrl: `http://localhost:3000/subPay?status=success&subId=${req.body.subId}` +
+//                   `&start_date=${start_date.toISOString()}` +
+//                   `&end_date=${end_date.toISOString()}`,
+      
+//       failUrl: `http://localhost:3000/subPay?status=failed`
+//     };
 
-    // call Konnect
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.API_KEY_KONNECT
-      },
-      body: JSON.stringify(payload)
-    });
-    const resData = await response.json();
+//     // call Konnect
+//     const response = await fetch(url, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         "x-api-key": process.env.API_KEY_KONNECT
+//       },
+//       body: JSON.stringify(payload)
+//     });
+//     const resData = await response.json();
 
-    return res.status(200).json({
-      status: "success",
-      result: resData
-    });
+//     return res.status(200).json({
+//       status: "success",
+//       result: resData
+//     });
 
-  } catch (err) {
-    console.error(err);
-    return res.status(400).json({
-      status: "fail",
-      message: err.message || "Something went wrong"
-    });
-  }
-};
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(400).json({
+//       status: "fail",
+//       message: err.message || "Something went wrong"
+//     });
+//   }
+// };
 
 // exports.verify = async (req , res) => {
 
@@ -656,3 +657,103 @@ exports.getMe = async (req, res) => {
       });
     }
   };
+
+
+  exports.getCheckoutSession = async (req, res) => {
+  try {
+    const url = "https://api.sandbox.konnect.network/api/v2/payments/init-payment";
+
+    // parse start_date and compute end_date based on the plan
+    const start_date = new Date(req.body.start_date);
+    let end_date = new Date(start_date);
+
+    const subscription = await Subscription.findById(req.body.subId);
+    if (!subscription) {
+      return res.status(404).json({ status: "fail", message: "Subscription not found" });
+    }
+
+    if (subscription.subscriptionType === "daily") {
+      end_date.setDate(end_date.getDate() + 1);
+    } else if (subscription.subscriptionType === "weekly") {
+      end_date.setDate(end_date.getDate() + 7);
+    } else if (subscription.subscriptionType.startsWith("monthly")) {
+      end_date.setMonth(end_date.getMonth() + 1);
+    }
+
+    // conflict check for same table_id
+    if (subscription.table_id) {
+      // find *any* existing booking that overlaps [start_date, end_date]
+      const potentiallyConflicted = await UserSubscription.find({
+        start_date: { $lte: end_date },
+        end_date:   { $gte: start_date }
+      }).populate('id_subscription');
+
+      // filter to the same table
+      const conflicts = potentiallyConflicted.filter(us =>
+        us.id_subscription &&
+        us.id_subscription.table_id?.toString() === subscription.table_id.toString()
+      );
+
+      if (conflicts.length > 0) {
+        // pick the one that ends the latest
+        const lastEnding = conflicts.reduce((prev, cur) =>
+          new Date(cur.end_date) > new Date(prev.end_date) ? cur : prev
+        );
+        const nextAvailable = new Date(lastEnding.end_date);
+        // if you want to require one extra day gap:
+        // nextAvailable.setDate(nextAvailable.getDate() + 1);
+
+        return res.status(210).json({
+          status: 'success',
+          message: `You can only reserve after ${new Intl.DateTimeFormat('en-CA').format(nextAvailable)}`
+        });
+      }
+    }
+
+    // const payload = {
+    //   receiverWalletId: process.env.WALLET_ID,
+    //   amount: req.body.amount,
+    //   description: req.body.description,
+    //   acceptedPaymentMethods: ["e-DINAR"],
+    //   successUrl: `http://localhost:3000/subPay?status=success&subId=${req.body.subId}` +
+    //               `&start_date=${start_date.toISOString()}` +
+    //               `&end_date=${end_date.toISOString()}`,
+    //   failUrl: `http://localhost:3000/subPay?status=failed`
+    // };
+
+    // build payment payloa
+    const payload = {
+      receiverWalletId: process.env.WALLET_ID,
+      amount: req.body.amount,
+      description: req.body.description,
+      acceptedPaymentMethods: ["e-DINAR"],
+      successUrl: `http://localhost:62252/#/success?subId=${req.body.subId}&start_date=${start_date.toISOString()}&end_date=${end_date.toISOString()}`,
+      failUrl: `http://localhost:62252/#/fail`
+    };
+
+    
+
+    // call Konnect
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.API_KEY_KONNECT
+      },
+      body: JSON.stringify(payload)
+    });
+    const resData = await response.json();
+
+    return res.status(200).json({
+      status: "success",
+      result: resData
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(400).json({
+      status: "fail",
+      message: err.message || "Something went wrong"
+    });
+  }
+};
