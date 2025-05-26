@@ -43,7 +43,8 @@ const notificationSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: [true , 'The Notification must have sender id']
-    }
+    },
+    
 })
 
 const Notification = mongoose.model('Notification' , notificationSchema)

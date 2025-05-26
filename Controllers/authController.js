@@ -8,6 +8,7 @@ const signToken =id=>{
     return jwt.sign({id:id},process.env.JWT_SECRET,{expiresIn : process.env.JWT_EXPIRE_IN})
 
 }
+
 // const createSendToken = (user, statusCode, res) => {
 //     const token = signToken(user._id);
 //     const cookieOptions = {

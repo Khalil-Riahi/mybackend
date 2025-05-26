@@ -63,7 +63,7 @@ exports.getall=async(req,res)=>{
                 })
     }
 }
-// 
+
 exports.addBooking = async (req, res) => {
     try {
         console.log(req.body)
@@ -161,6 +161,178 @@ exports.addBooking = async (req, res) => {
     }
 };
 
+// exports.addBooking = async (req, res) => {
+//     try {
+//         const { numTable, check_in, check_out, id_user, price, paymentMethod, date, points } = req.body;
+//         let status = "confirmed";
+
+//         // Validate required fields
+//         if (
+//             numTable === undefined || check_in === undefined || check_out === undefined ||
+//             id_user === undefined || price === undefined || paymentMethod === undefined || date === undefined
+//         ) {
+//             return res.status(400).json({
+//                 status: 'fail',
+//                 message: 'Missing required booking information'
+//             });
+//         }
+
+//         // Prevent double booking for the same date/time/table
+//         const bookingDate = new Date(date);
+//         const startOfDay = new Date(bookingDate.setHours(0, 0, 0, 0));
+//         const endOfDay = new Date(bookingDate.setHours(23, 59, 59, 999));
+
+//         const existingReservation = await TablePaiement.findOne({
+//             numTable,
+//             date: { $gte: startOfDay, $lt: endOfDay },
+//             $or: [
+//                 {
+//                     check_in: { $lt: check_out },
+//                     check_out: { $gt: check_in }
+//                 }
+//             ]
+//         });
+
+//         if (existingReservation) {
+//             return res.status(409).json({
+//                 status: 'fail',
+//                 message: 'Table is already reserved on this date and time'
+//             });
+//         }
+
+//         // Ensure table exists
+//         const table = await Table.findOne({ numTable });
+//         if (!table) {
+//             return res.status(404).json({
+//                 status: 'fail',
+//                 message: 'Table not found'
+//             });
+//         }
+
+//         // Handle CASH booking
+//         if (paymentMethod === "cash") {
+//             status = "pending";
+
+//             const admins = await User.find({ role: "admin" });
+//             if (admins.length === 0) {
+//                 return res.status(404).json({
+//                     status: 'fail',
+//                     message: 'No admins found to notify'
+//                 });
+//             }
+
+//             const booking = await TablePaiement.create({
+//                 check_in,
+//                 check_out,
+//                 date: new Date(date),
+//                 id_user,
+//                 numTable,
+//                 price,
+//                 paymentMethod,
+//                 status
+//             });
+
+//             await Table.findOneAndUpdate(
+//                 { numTable },
+//                 { status: 'occupied' }
+//             );
+
+//             const bookingDetails = {
+//                 check_in,
+//                 check_out,
+//                 date,
+//                 id_user,
+//                 numTable,
+//                 price,
+//                 paymentMethod
+//             };
+
+//             // const notifications = admins.map(admin => ({
+//             //     title: Nouvelle réservation en espèces,
+//             //     content: Réservation pour la table ${numTable} de ${check_in} à ${check_out} le ${date}, prix : ${price} DA.,
+//             //     user_id: admin._id,
+//             //     sender_id: id_user,
+//             //     status: 'pending',
+//             //     booking_id: booking._id,
+//             //     bookingDetails, // ✅ Include booking details for admin approval
+//             //     sentDate: new Date(),
+//             //     sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+//             // }));
+
+//             const notifications = admins.map(admin => ({
+//     title: 'Nouvelle réservation en espèces',
+//     content: `Réservation pour la table ${numTable} de ${check_in} à ${check_out} le ${date}, prix : ${price} DA.`,
+//     user_id: admin._id,
+//     sender_id: id_user,
+//     status: 'pending',
+//     booking_id: booking._id,
+//     bookingDetails, // ✅ Include booking details for admin approval
+//     sentDate: new Date(),
+//     sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+// }));
+
+//             await Notification.insertMany(notifications);
+
+//             return res.status(201).json({
+//                 status: 'success',
+//                 message: 'Cash booking added and notification sent to admins',
+//                 booking
+//             });
+//         }
+
+//         // Handle ONLINE booking
+//         if (paymentMethod === "online") {
+//             status = "confirmed";
+//             const pointsfidelite = Math.round(price / 1500);
+//             await User.findByIdAndUpdate(
+//                 id_user,
+//                 { $inc: { Loyaltypoints: pointsfidelite } },
+//                 { runValidators: false }
+//             );
+//         }
+
+//         // Handle POINTS booking
+//         if (paymentMethod === "points") {
+//             status = "confirmed";
+//             await User.findByIdAndUpdate(
+//                 id_user,
+//                 { points }, // New points after deduction
+//                 { new: true, runValidators: true }
+//             );
+//         }
+
+//         // Create booking for online and points payment
+//         const booking = await TablePaiement.create({
+//             check_in,
+//             check_out,
+//             date: new Date(date),
+//             id_user,
+//             numTable,
+//             price,
+//             paymentMethod,
+//             status
+//         });
+
+//         await Table.findOneAndUpdate(
+//             { numTable },
+//             { status: 'occupied' }
+//         );
+
+//         res.status(201).json({
+//             status: 'success',
+//             message: 'Booking added successfully',
+//             booking
+//         });
+
+//     } catch (error) {
+//         console.error('Booking error:', error);
+//         res.status(500).json({
+//             status: 'error',
+//             message: error.message || 'Internal server error'
+//         });
+//     }
+// };
+
 
 // exports.getCheckoutSession = async(req , res) => {
 //     try{
@@ -207,8 +379,8 @@ exports.getCheckoutSession = async(req , res) => {
             amount : req.body.amount,
             description: req.body.description,
             acceptedPaymentMethods: ["e-DINAR"],
-            successUrl: `http://localhost:3000/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}&date=${req.query.date}`,
-            failUrl: `http://localhost:3000/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}`,
+            successUrl: `http://localhost:59082/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}&date=${req.query.date}`,
+            failUrl: `http://localhost:59082/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}`,
         }
 
         const response = await fetch(url , {
@@ -234,27 +406,120 @@ exports.getCheckoutSession = async(req , res) => {
     }
 }
 
-exports.verify = async (req , res) => {
+// exports.verify = async (req , res) => {
 
-    try{
-        const id_payment = req.params.id
-        // const url = https://api.sandbox.konnect.network/api/v2/payments/${id_payment}
+//     try{
+//         const id_payment = req.params.id
+//         // const url = https://api.sandbox.konnect.network/api/v2/payments/${id_payment}
 
-        const response = await fetch(`https://api.sandbox.konnect.network/api/v2/payments/${id_payment}`)
+//         const response = await fetch(`https://api.sandbox.konnect.network/api/v2/payments/${id_payment}`)
 
-        const resData = await response.json()
+//         const resData = await response.json()
 
-        res.json({
-            // status: 'success', 
-            resData
-        })
-    }catch(err){
-        res.json(400).json({
-            status: 'fail',
-            message: err
-        })
+//         res.json({
+//             // status: 'success', 
+//             resData
+//         })
+//     }catch(err){
+//         res.json(400).json({
+//             status: 'fail',
+//             message: err
+//         })
+//     }
+// }
+
+// exports.verify = async (req , res) => {
+
+//     try{
+//         const id_payment = req.params.id
+//         const { userId, start_time , end_time , numTable , date } = req.query;
+//     const  paymentId=req.params.id
+//         // const url = https://api.sandbox.konnect.network/api/v2/payments/${id_payment}
+
+//         const response = await fetch(`https://api.sandbox.konnect.network/api/v2/payments/${id_payment}`)
+
+//         const resData = await response.json()
+
+//         if (resData.payment.transactions[0].status === "success") {
+              
+        
+//               const reservation = {
+//                 id_user: userId,
+//                 check_in: start_time,
+//                 check_out: end_time,
+//                 numTable: numTable,
+//                 date: date,
+//               };
+        
+//               const newRes = await UserSubscription.create(reservation);
+        
+//               res.status(200).json({
+//                 status: 'success',
+//                 newRes
+//             });
+//         }
+
+//     }catch(err){
+//          res.status(400).json({
+//             status: 'fail',
+//             message: err
+//         })
+//     }
+// }
+
+exports.verify = async (req, res) => {
+  try {
+    const paymentId = req.params.id;               // :id in the URL
+    const { userId, start_time, end_time, numTable, date } = req.query;
+
+    // ---- sanity-checks ----------------------------------------------------
+    if (!userId || !start_time || !end_time || !numTable || !date) {
+      return res.status(400).json({
+        status : 'fail',
+        message: 'Missing query parameters'
+      });
     }
-}
+    // ----------------------------------------------------------------------
+
+    // Ask Konnect for the transaction status
+    const konnectRes   = await fetch(`https://api.sandbox.konnect.network/api/v2/payments/${paymentId}`);
+    const konnectData  = await konnectRes.json();
+
+    const trxStatus =
+      konnectData?.payment?.transactions?.[0]?.status ?? 'unknown';
+
+    if (trxStatus !== 'success') {
+      return res.status(400).json({
+        status : 'fail',
+        message: `Payment not successful (status = ${trxStatus})`
+      });
+    }
+
+    // Create the booking
+    const reservation = {
+      id_user  : userId,
+      check_in : start_time,
+      check_out: end_time,
+      numTable ,
+      date,
+      price: (konnectData?.payment?.transactions?.[0]?.amount) /1000
+    };
+
+    const newBooking = await TablePaiement.create(reservation);
+
+    return res.status(200).json({
+      status: 'success',
+      booking: newBooking
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      status : 'error',
+      message: err.message || 'Internal server error'
+    });
+  }
+};
 
 exports.getHistory=async(req,res)=>{
     try{
