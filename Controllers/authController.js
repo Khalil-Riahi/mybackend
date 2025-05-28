@@ -50,25 +50,81 @@ exports.signup=catchAsync(async(req,res)=>{
     createSendToken(newUser,201,res)
     })
 
+// exports.login = async (req, res, next) => {
+//     console.log("hetha: " + req.hostname)
+//     console.log('IP address:', req.ip);
+//     console.log('Full headers:', req.headers.origin);
+//     const { email, password } = req.body;
+//     if (!email || !password) {
+//         return next(new AppError('Please provide an email and password', 400));
+//     }
+//     const user = await User.findOne({ email }).select('+password');
+//     if (!user) {
+//         return next(new AppError('Invalid email', 401));
+//     }
+//     const correct = await user.correctPassword(password, user.password);
+//     if (!correct) {
+//         return next(new AppError('Invalid password', 401));
+//     }
+//     createSendToken(user,200,res)
+
+
+// };
+
+// exports.login = async (req, res, next) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     // 1) Check if email & password exist
+//     if (!email || !password) {
+//       return next(new AppError('Please provide an email and password', 400));
+//     }
+
+//     // 2) Check if user exists & password is correct
+//     const user = await User.findOne({ email }).select('+password');
+//     if (!user) {
+//       return next(new AppError('Invalid email', 401));
+//     }
+
+//     const correct = await user.correctPassword(password, user.password);
+//     if (!correct || !user) {
+//       return next(new AppError('Invalid password', 401));
+//     }
+
+//     // 3) If everything is OK, send token to client
+//     createSendToken(user, 200, res);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 exports.login = async (req, res, next) => {
-    console.log("hetha: " + req.hostname)
-    console.log('IP address:', req.ip);
-    console.log('Full headers:', req.headers.origin);
+  try {
     const { email, password } = req.body;
+
+    // 1) Both fields are required
     if (!email || !password) {
-        return next(new AppError('Please provide an email and password', 400));
+      return next(new AppError('Please provide an email and password', 400));
     }
+
+    // 2) Find user + check password
+    //    — note we select password explicitly
     const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-        return next(new AppError('Invalid email', 401));
-    }
-    const correct = await user.correctPassword(password, user.password);
-    if (!correct) {
-        return next(new AppError('Invalid password', 401));
-    }
-    createSendToken(user,200,res)
 
+    // 3) If user not found OR password incorrect,
+    //    throw the same generic message
+    if (
+      !user ||
+      !(await user.correctPassword(password, user.password))
+    ) {
+      return next(new AppError('Invalid email or password', 401));
+    }
 
+    // 4) Everything ok → send token
+    createSendToken(user, 200, res);
+  } catch (err) {
+    next(err);
+  }
 };
 
 // exports.protect = catchAsync(async (req, res, next) => {
@@ -232,8 +288,8 @@ exports.getCheckoutSession1 = async(req , res) => {
           amount : req.body.amount,
           description: req.body.description,
           acceptedPaymentMethods: ["e-DINAR"],
-          successUrl: `http://localhost:62252/#/points/verify?status=success&userId=${req.query.userId}&points=${req.query.points}`,
-          failUrl: `http://localhost:62252/#/points/verify?status=failed`,
+          successUrl: `http://localhost:3002/points/verify?status=success&userId=${req.query.userId}&points=${req.query.points}`,
+          failUrl: `http://localhost:3002/points/verify?status=failed`,
       }
 
       const response = await fetch(url , {

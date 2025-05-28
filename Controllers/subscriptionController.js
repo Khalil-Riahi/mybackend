@@ -715,20 +715,20 @@ exports.getMe = async (req, res) => {
     //   amount: req.body.amount,
     //   description: req.body.description,
     //   acceptedPaymentMethods: ["e-DINAR"],
-    //   successUrl: `http://localhost:3000/subPay?status=success&subId=${req.body.subId}` +
+    //   successUrl: `http://localhost:3002/subPay?status=success&subId=${req.body.subId}` +
     //               `&start_date=${start_date.toISOString()}` +
     //               `&end_date=${end_date.toISOString()}`,
-    //   failUrl: `http://localhost:3000/subPay?status=failed`
+    //   failUrl: `http://localhost:3002/subPay?status=failed`
     // };
 
-    // build payment payloa
+    // build payment payload
     const payload = {
       receiverWalletId: process.env.WALLET_ID,
       amount: req.body.amount,
       description: req.body.description,
       acceptedPaymentMethods: ["e-DINAR"],
-      successUrl: `http://localhost:62252/#/success?subId=${req.body.subId}&start_date=${start_date.toISOString()}&end_date=${end_date.toISOString()}`,
-      failUrl: `http://localhost:62252/#/fail`
+      successUrl: `http://localhost:54228/#/success?subId=${req.body.subId}&start_date=${start_date.toISOString()}&end_date=${end_date.toISOString()}`,
+      failUrl: `http://localhost:54228/#/fail`
     };
 
     

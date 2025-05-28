@@ -11,5 +11,8 @@ bookingRoute
     .get('/getReservation',bookingController.getReservations)
     .get('/getReservationPrivateOffice',bookingController.getReservationsprivateOffice)
     .get('/checkAvailability' , bookingController.checkAvailability)
+    .get('/getReservationById/:iduser',bookingController.getReservationByUserId)
+    .put('/cancel/:id',bookingController.cancel)
+
 
 module.exports=bookingRoute

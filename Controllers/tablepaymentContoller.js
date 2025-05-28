@@ -379,8 +379,8 @@ exports.getCheckoutSession = async(req , res) => {
             amount : req.body.amount,
             description: req.body.description,
             acceptedPaymentMethods: ["e-DINAR"],
-            successUrl: `http://localhost:59082/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}&date=${req.query.date}`,
-            failUrl: `http://localhost:59082/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}`,
+            successUrl: `http://localhost:3000/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}&date=${req.query.date}`,
+            failUrl: `http://localhost:3000/#/payment?start_time=${req.query.start_time}&end_time=${req.query.end_time}&numTable=${req.query.numTable}`,
         }
 
         const response = await fetch(url , {
@@ -405,6 +405,20 @@ exports.getCheckoutSession = async(req , res) => {
         })
     }
 }
+
+exports.getReservationByUserId = async (req, res) => {
+    try {
+        const reservations = await TablePaiement.find({ id_user: req.params.iduser });
+
+        res.status(200).json({ success: "success", data: reservations });
+
+    } catch (error) {
+        res.status(404).json({
+            status: "fail",
+            error
+        });
+    }
+};
 
 // exports.verify = async (req , res) => {
 
@@ -768,4 +782,21 @@ exports.checkAvailability = async (req, res) => {
       message: err.message
     });
   }
+}
+
+exports.cancel=async(req,res)=>{
+    try{
+        console.log(req.params.id)
+        await TablePaiement.findByIdAndUpdate(req.params.id, { status: 'canceled' });
+        res.status(200).json({
+            status:"success"
+        })
+
+    }catch(error){
+        res.status(404).json({
+            status:"error",
+            error
+        })
+    
+    }
 }
